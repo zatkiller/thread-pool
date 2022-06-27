@@ -6,13 +6,13 @@ namespace threadpool {
     void Threadpool::init(int num) {
         std::call_once(once_, [this, num]() {
             writelock lock(mtx_);
-            hasStopped_ = false;
-            isCancelled_ = false;
+            hasStopped_.store(false);
+            isCancelled_.store(false);
             workers_.reserve(num);
             for (int i = 0; i < num; ++i) {
                 workers_.emplace_back(std::bind(&Threadpool::spawn, this));
             }
-            isInitialized_ = true;
+            isInitialized_.store(true);
         });
     }
 
@@ -24,10 +24,10 @@ namespace threadpool {
                 writelock lock(mtx_);
                 cond_.wait(lock, [this, &pop, &task] {
                     pop = tasks_.pop(task);
-                    return isCancelled_ || hasStopped_ || pop;
+                    return isCancelled_.load() || hasStopped_.load() || pop;
                 });
             }
-            if (isCancelled_ || (hasStopped_ && !pop)) {
+            if (isCancelled_.load() || (hasStopped_.load() && !pop)) {
                 return;
             }
             task();
@@ -40,7 +40,7 @@ namespace threadpool {
             if (!isRunningImpl())
                 return;
 
-            hasStopped_ = true;
+            hasStopped_.store(true);
         }
         cond_.notify_all();
         for (auto &worker: workers_)
@@ -53,7 +53,7 @@ namespace threadpool {
             if (!isRunningImpl())
                 return;
                 
-            isCancelled_ = true;
+            isCancelled_.store(true);
         }
 
         tasks_.clear();
@@ -65,11 +65,11 @@ namespace threadpool {
 
     bool Threadpool::isInitialized() const {
         readlock lock(mtx_);
-        return isInitialized_;
+        return isInitialized_.load();
     }
 
     bool Threadpool::isRunningImpl() const {
-        return isInitialized_ && !hasStopped_ && !isCancelled_;
+        return isInitialized_.load() && !(hasStopped_.load()) && !(isCancelled_.load());
     }
 
     bool Threadpool::isRunning() const {

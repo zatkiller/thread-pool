@@ -49,9 +49,9 @@ public:
     }
 
 private:
-    bool isInitialized_ = false;
-    bool hasStopped_ = false;
-    bool isCancelled_ = false;
+    std::atomic<bool> isInitialized_ {false};
+    std::atomic<bool> hasStopped_ {false};
+    std::atomic<bool> isCancelled_ {false};
     std::vector<std::thread> workers_;
     mutable std::shared_mutex mtx_;
     mutable task_queue::TaskQueue<std::function<void()>> tasks_;
