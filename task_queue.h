@@ -7,6 +7,7 @@
 namespace task_queue {
 template <typename T> 
 class TaskQueue : protected std::queue<T> {
+public:
     using writelock = std::unique_lock<std::shared_mutex>;
     using readlock = std::shared_lock<std::shared_mutex>;
 
@@ -58,6 +59,6 @@ class TaskQueue : protected std::queue<T> {
 
 private:
     mutable std::shared_mutex mtx_; // Mutable Can be changed in const function
-};// namespace task_queue
+};
 
 } // namespace task_queue
