@@ -17,7 +17,7 @@ namespace threadpool {
     }
 
     void Threadpool::spawn() {
-        for (;;) {
+        while (true) {
             bool pop = false;
             std::function<void()> task;
             {
