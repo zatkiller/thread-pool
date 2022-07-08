@@ -1,4 +1,4 @@
-# thread-pool-task-scheduler
+# thread-pool
 
 To run file, run the following command:
 
